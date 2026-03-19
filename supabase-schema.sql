@@ -45,4 +45,5 @@ create policy "Public insert reservations" on reservations for insert with check
 create policy "Public delete reservations" on reservations for delete using (true);
 create policy "Public read depenses" on depenses for select using (true);
 create policy "Public insert depenses" on depenses for insert with check (true);
+create policy "Public update depenses" on depenses for update using (true) with check (true);
 create policy "Public delete depenses" on depenses for delete using (true);
