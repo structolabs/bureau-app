@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
-import Reservations from './components/Reservations'
 import Depenses from './components/Depenses'
-import { IconDashboard, IconCalendar, IconWallet, IconLogout } from './components/Icons'
+import { IconDashboard, IconWallet, IconLogout } from './components/Icons'
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
-  { id: 'reservations', label: 'Reservations', icon: IconCalendar },
   { id: 'depenses', label: 'Depenses', icon: IconWallet },
 ]
 
@@ -61,7 +59,6 @@ export default function App() {
       {/* Content */}
       <main className="flex-1 p-4 pb-20 lg:pb-4 max-w-5xl mx-auto w-full">
         {tab === 'dashboard' && <Dashboard user={user} />}
-        {tab === 'reservations' && <Reservations />}
         {tab === 'depenses' && <Depenses user={user} />}
       </main>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { USERS, formatEuro, formatDate, getUserColor } from '../lib/constants'
-import { IconWallet } from './Icons'
+import { IconWallet, IconPlus } from './Icons'
 
 const GCAL_EMBED_URL = 'https://calendar.google.com/calendar/embed?src=ca65bb4a6552d5fd299d794cd3d1324bfdb89f980414d0620b51a7b1da0e1934%40group.calendar.google.com&ctz=Europe%2FParis&mode=WEEK&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0'
 
@@ -77,7 +77,19 @@ export default function Dashboard({ user }) {
         />
       </div>
 
-      {/* Google Calendar embed */}
+      {/* Google Calendar */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-900">Calendrier du bureau</h3>
+        <a
+          href="https://calendar.google.com/calendar/r/eventedit?cid=ca65bb4a6552d5fd299d794cd3d1324bfdb89f980414d0620b51a7b1da0e1934@group.calendar.google.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
+        >
+          <IconPlus className="w-4 h-4" />
+          Reserver le bureau
+        </a>
+      </div>
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <iframe
           src={GCAL_EMBED_URL}
