@@ -61,7 +61,7 @@ export default function App() {
       {/* Content */}
       <main className="flex-1 p-4 pb-20 lg:pb-4 max-w-5xl mx-auto w-full">
         {tab === 'dashboard' && <Dashboard user={user} />}
-        {tab === 'reservations' && <Reservations user={user} />}
+        {tab === 'reservations' && <Reservations />}
         {tab === 'depenses' && <Depenses user={user} />}
       </main>
 
