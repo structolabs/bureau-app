@@ -125,12 +125,7 @@ export default function Dashboard({ user }) {
           label="Depenses du mois"
           value={formatEuro(totalDepenses)}
         />
-        <MetricCard
-          icon={<IconWallet className="w-5 h-5 text-gray-400" />}
-          label="Mon solde"
-          value={formatEuro(solde)}
-          valueColor={solde >= 0 ? 'text-emerald-600' : 'text-red-500'}
-        />
+        <SoldeCard solde={solde} userName={user.nom} />
       </div>
 
       {/* Google Calendar */}
@@ -410,6 +405,42 @@ function MetricCard({ icon, label, value, valueColor = 'text-gray-900' }) {
         <span className="text-xs text-gray-500">{label}</span>
       </div>
       <div className={`text-lg font-semibold ${valueColor}`}>{value}</div>
+    </div>
+  )
+}
+
+function SoldeCard({ solde, userName }) {
+  const others = Object.keys(USERS).filter(n => n !== userName)
+  const absSolde = Math.abs(solde)
+  const perPerson = absSolde / 2
+
+  let label, valueColor, subtext
+  if (solde > 0.01) {
+    label = 'A recuperer'
+    valueColor = 'text-emerald-600'
+    subtext = `${others.join(' et ')} te doivent ${formatEuro(perPerson)} chacun`
+  } else if (solde < -0.01) {
+    label = 'A regler'
+    valueColor = 'text-red-500'
+    subtext = `Tu dois ${formatEuro(absSolde)} a repartir sur les prochaines depenses`
+  } else {
+    label = 'Equilibre'
+    valueColor = 'text-gray-900'
+    subtext = null
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <IconWallet className="w-5 h-5 text-gray-400" />
+        <span className="text-xs text-gray-500">{label}</span>
+      </div>
+      <div className={`text-lg font-semibold ${valueColor}`}>
+        {solde > 0.01 ? '+' : ''}{formatEuro(solde)}
+      </div>
+      {subtext && (
+        <p className="text-[11px] text-gray-400 mt-1 leading-tight">{subtext}</p>
+      )}
     </div>
   )
 }
