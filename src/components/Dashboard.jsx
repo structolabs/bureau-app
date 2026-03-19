@@ -159,6 +159,7 @@ export default function Dashboard({ user }) {
               type="date"
               value={formDate}
               onChange={e => setFormDate(e.target.value)}
+              min="2020-01-01"
               max="2099-12-31"
               className="border border-gray-200 rounded-lg px-2.5 py-2 text-sm w-[130px]"
               required
@@ -336,6 +337,7 @@ export default function Dashboard({ user }) {
                   type="date"
                   value={editDate}
                   onChange={e => setEditDate(e.target.value)}
+                  min="2020-01-01"
                   max="2099-12-31"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                   required
