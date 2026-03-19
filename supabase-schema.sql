@@ -1,0 +1,48 @@
+-- Tables Bureau App
+
+create table if not exists users (
+  id uuid default gen_random_uuid() primary key,
+  nom text not null unique,
+  pin text not null,
+  couleur text not null
+);
+
+create table if not exists reservations (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  date date not null,
+  heure_debut integer not null,
+  heure_fin integer not null,
+  occupant text not null references users(nom),
+  motif text not null
+);
+
+create table if not exists depenses (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  date date not null,
+  description text not null,
+  categorie text not null,
+  paye_par text not null references users(nom),
+  montant numeric(10,2) not null
+);
+
+-- Seed users
+insert into users (nom, pin, couleur) values
+  ('Simon', '1234', '#3B82F6'),
+  ('Franck', '1234', '#10B981'),
+  ('Flo', '1234', '#F59E0B')
+on conflict (nom) do nothing;
+
+-- RLS policies (permissive for anon key)
+alter table users enable row level security;
+alter table reservations enable row level security;
+alter table depenses enable row level security;
+
+create policy "Public read users" on users for select using (true);
+create policy "Public read reservations" on reservations for select using (true);
+create policy "Public insert reservations" on reservations for insert with check (true);
+create policy "Public delete reservations" on reservations for delete using (true);
+create policy "Public read depenses" on depenses for select using (true);
+create policy "Public insert depenses" on depenses for insert with check (true);
+create policy "Public delete depenses" on depenses for delete using (true);

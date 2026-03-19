@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-simon: #3B82F6;
+  --color-franck: #10B981;
+  --color-flo: #F59E0B;
+  --color-simon-light: #DBEAFE;
+  --color-franck-light: #D1FAE5;
+  --color-flo-light: #FEF3C7;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #F9FAFB;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
