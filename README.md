@@ -1,16 +1,32 @@
-# React + Vite
+# Bureau Nanette
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App de gestion du bureau partagé — 12 rue de l'Aimable Nanette, La Rochelle
 
-Currently, two official plugins are available:
+## Accès
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- URL : https://bureau-nanette.vercel.app
+- PIN : 1234 (Simon / Franck / Flo)
 
-## React Compiler
+## Fonctionnalités
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Réservation du bureau via Google Calendar (BUREAU Aimable Nanette)
+- Suivi des dépenses communes avec calcul automatique 1/3
+- Solde indicatif par personne (À récupérer / À régler)
+- Modifier et supprimer ses propres dépenses
 
-## Expanding the ESLint configuration
+## Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React + Vite + Tailwind CSS
+- Supabase (PostgreSQL) — projet bureau-app
+- Déployé sur Vercel
+
+## Développement local
+
+1. Clone le repo
+2. Crée un fichier `.env` :
+   ```
+   VITE_SUPABASE_URL=https://uapsfemdlqslnxxkgkte.supabase.co
+   VITE_SUPABASE_ANON_KEY=ta-clé-anon
+   ```
+3. `npm install`
+4. `npm run dev` → http://localhost:5173
