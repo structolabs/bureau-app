@@ -22,7 +22,9 @@ export default function Dashboard({ user }) {
 
   // Edit modal state
   const [editDepense, setEditDepense] = useState(null)
-  const [editDate, setEditDate] = useState('')
+  const [editDay, setEditDay] = useState('')
+  const [editMonth, setEditMonth] = useState('')
+  const [editYear, setEditYear] = useState('')
   const [editDesc, setEditDesc] = useState('')
   const [editCategorie, setEditCategorie] = useState('')
   const [editMontant, setEditMontant] = useState('')
@@ -87,7 +89,10 @@ export default function Dashboard({ user }) {
 
   function openEdit(d) {
     setEditDepense(d)
-    setEditDate(d.date)
+    const [y, m, day] = d.date.split('-')
+    setEditYear(y)
+    setEditMonth(m)
+    setEditDay(day)
     setEditDesc(d.description)
     setEditCategorie(d.categorie)
     setEditMontant(String(d.montant))
@@ -97,6 +102,7 @@ export default function Dashboard({ user }) {
     e.preventDefault()
     if (!editDepense || !editDesc.trim() || !editMontant) return
     setSaving(true)
+    const editDate = `${editYear}-${editMonth}-${editDay}`
     await supabase.from('depenses').update({
       date: editDate,
       description: editDesc.trim(),
@@ -333,15 +339,26 @@ export default function Dashboard({ user }) {
             <form onSubmit={handleEditSubmit} className="space-y-3">
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Date</label>
-                <input
-                  type="date"
-                  value={editDate}
-                  onChange={e => setEditDate(e.target.value)}
-                  min="2020-01-01"
-                  max="2099-12-31"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                  required
-                />
+                <div className="flex gap-2">
+                  <select value={editDay} onChange={e => setEditDay(e.target.value)} className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm" required>
+                    <option value="">Jour</option>
+                    {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <select value={editMonth} onChange={e => setEditMonth(e.target.value)} className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm" required>
+                    <option value="">Mois</option>
+                    {['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => (
+                      <option key={m} value={m}>{new Date(2000, Number(m) - 1).toLocaleDateString('fr-FR', { month: 'short' })}</option>
+                    ))}
+                  </select>
+                  <select value={editYear} onChange={e => setEditYear(e.target.value)} className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm" required>
+                    <option value="">Annee</option>
+                    {Array.from({ length: 10 }, (_, i) => String(2024 + i)).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Description</label>
