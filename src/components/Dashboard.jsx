@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { CATEGORIES_DEPENSES, USERS, formatEuro, getUserColor, getUserLightColor } from '../lib/constants'
-import { IconWallet, IconPlus, IconChevronLeft, IconChevronRight } from './Icons'
+import { IconWallet, IconPlus, IconChevronLeft, IconChevronRight, IconPencil, IconTrash, IconX } from './Icons'
 
 const GCAL_EMBED_URL = 'https://calendar.google.com/calendar/embed?src=ca65bb4a6552d5fd299d794cd3d1324bfdb89f980414d0620b51a7b1da0e1934%40group.calendar.google.com&ctz=Europe%2FParis&mode=WEEK&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0'
 
@@ -19,6 +19,13 @@ export default function Dashboard({ user }) {
   const [formCategorie, setFormCategorie] = useState(CATEGORIES_DEPENSES[0])
   const [formMontant, setFormMontant] = useState('')
   const [saving, setSaving] = useState(false)
+
+  // Edit modal state
+  const [editDepense, setEditDepense] = useState(null)
+  const [editDate, setEditDate] = useState('')
+  const [editDesc, setEditDesc] = useState('')
+  const [editCategorie, setEditCategorie] = useState('')
+  const [editMontant, setEditMontant] = useState('')
 
   const monthStart = `${month.year}-${String(month.month + 1).padStart(2, '0')}-01`
   const nextMonth = month.month === 11
@@ -76,6 +83,35 @@ export default function Dashboard({ user }) {
 
   function nextMonthNav() {
     setMonth(m => m.month === 11 ? { year: m.year + 1, month: 0 } : { ...m, month: m.month + 1 })
+  }
+
+  function openEdit(d) {
+    setEditDepense(d)
+    setEditDate(d.date)
+    setEditDesc(d.description)
+    setEditCategorie(d.categorie)
+    setEditMontant(String(d.montant))
+  }
+
+  async function handleEditSubmit(e) {
+    e.preventDefault()
+    if (!editDepense || !editDesc.trim() || !editMontant) return
+    setSaving(true)
+    await supabase.from('depenses').update({
+      date: editDate,
+      description: editDesc.trim(),
+      categorie: editCategorie,
+      montant: parseFloat(editMontant),
+    }).eq('id', editDepense.id)
+    setSaving(false)
+    setEditDepense(null)
+    loadDepenses()
+  }
+
+  async function handleDelete(d) {
+    if (!confirm('Supprimer cette depense ?')) return
+    await supabase.from('depenses').delete().eq('id', d.id)
+    loadDepenses()
   }
 
   const monthLabel = new Date(month.year, month.month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -204,6 +240,7 @@ export default function Dashboard({ user }) {
                     <th className="text-left p-3 font-medium">Payeur</th>
                     <th className="text-right p-3 font-medium">Montant</th>
                     <th className="text-right p-3 font-medium hidden sm:table-cell">Part (1/3)</th>
+                    <th className="w-16 p-3" />
                   </tr>
                 </thead>
                 <tbody>
@@ -230,6 +267,26 @@ export default function Dashboard({ user }) {
                       <td className="p-3 text-right font-medium text-gray-900">{formatEuro(d.montant)}</td>
                       <td className="p-3 text-right text-gray-500 hidden sm:table-cell">
                         {formatEuro(Number(d.montant) / 3)}
+                      </td>
+                      <td className="p-3 text-right">
+                        {d.paye_par === user.nom && (
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openEdit(d)}
+                              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                              title="Modifier"
+                            >
+                              <IconPencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(d)}
+                              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <IconTrash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -265,6 +322,82 @@ export default function Dashboard({ user }) {
           )}
         </div>
       </div>
+
+      {/* Edit modal */}
+      {editDepense && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={() => setEditDepense(null)}>
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-sm p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900">Modifier la depense</h3>
+              <button onClick={() => setEditDepense(null)} className="text-gray-400 hover:text-gray-600">
+                <IconX className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Date</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={e => setEditDate(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Description</label>
+                <input
+                  type="text"
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Categorie</label>
+                <select
+                  value={editCategorie}
+                  onChange={e => setEditCategorie(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                >
+                  {CATEGORIES_DEPENSES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Montant</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editMontant}
+                  onChange={e => setEditMontant(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditDepense(null)}
+                  className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                >
+                  {saving ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
