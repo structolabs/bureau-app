@@ -27,6 +27,8 @@ export default function Dashboard({ user }) {
   const [editDesc, setEditDesc] = useState('')
   const [editCategorie, setEditCategorie] = useState('')
   const [editMontant, setEditMontant] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
 
   const monthStart = `${month.year}-${String(month.month + 1).padStart(2, '0')}-01`
   const nextMonth = month.month === 11
@@ -92,19 +94,25 @@ export default function Dashboard({ user }) {
     setEditDesc(d.description)
     setEditCategorie(d.categorie)
     setEditMontant(String(d.montant))
+    setEditError('')
   }
 
   async function handleEditSubmit(e) {
     e.preventDefault()
     if (!editDepense || !editDate || !editDesc.trim() || !editMontant) return
-    setSaving(true)
-    await supabase.from('depenses').update({
+    setEditError('')
+    setEditSaving(true)
+    const { error } = await supabase.from('depenses').update({
       date: editDate,
       description: editDesc.trim(),
       categorie: editCategorie,
       montant: parseFloat(editMontant),
     }).eq('id', editDepense.id)
-    setSaving(false)
+    setEditSaving(false)
+    if (error) {
+      setEditError(error.message)
+      return
+    }
     setEditDepense(null)
     loadDepenses()
   }
@@ -391,12 +399,15 @@ export default function Dashboard({ user }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={editSaving}
                   className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
                 >
-                  {saving ? 'Enregistrement...' : 'Enregistrer'}
+                  {editSaving ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
               </div>
+              {editError && (
+                <p className="text-xs text-red-500 mt-2">{editError}</p>
+              )}
             </form>
           </div>
         </div>
