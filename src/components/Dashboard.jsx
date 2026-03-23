@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { CATEGORIES_DEPENSES, USERS, formatEuro, getUserColor, getUserLightColor } from '../lib/constants'
 import { IconWallet, IconPlus, IconChevronLeft, IconChevronRight, IconPencil, IconTrash, IconX } from './Icons'
+import TodoList from './TodoList'
 
 const GCAL_EMBED_URL = 'https://calendar.google.com/calendar/embed?src=ca65bb4a6552d5fd299d794cd3d1324bfdb89f980414d0620b51a7b1da0e1934%40group.calendar.google.com&ctz=Europe%2FParis&mode=WEEK&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0'
 
@@ -22,9 +23,7 @@ export default function Dashboard({ user }) {
 
   // Edit modal state
   const [editDepense, setEditDepense] = useState(null)
-  const [editDay, setEditDay] = useState('')
-  const [editMonth, setEditMonth] = useState('')
-  const [editYear, setEditYear] = useState('')
+  const [editDate, setEditDate] = useState('')
   const [editDesc, setEditDesc] = useState('')
   const [editCategorie, setEditCategorie] = useState('')
   const [editMontant, setEditMontant] = useState('')
@@ -89,10 +88,7 @@ export default function Dashboard({ user }) {
 
   function openEdit(d) {
     setEditDepense(d)
-    const [y, m, day] = d.date.split('-')
-    setEditYear(y)
-    setEditMonth(m)
-    setEditDay(day)
+    setEditDate(d.date)
     setEditDesc(d.description)
     setEditCategorie(d.categorie)
     setEditMontant(String(d.montant))
@@ -100,9 +96,8 @@ export default function Dashboard({ user }) {
 
   async function handleEditSubmit(e) {
     e.preventDefault()
-    if (!editDepense || !editDesc.trim() || !editMontant) return
+    if (!editDepense || !editDate || !editDesc.trim() || !editMontant) return
     setSaving(true)
-    const editDate = `${editYear}-${editMonth}-${editDay}`
     await supabase.from('depenses').update({
       date: editDate,
       description: editDesc.trim(),
@@ -155,6 +150,9 @@ export default function Dashboard({ user }) {
           title="Calendrier Bureau"
         />
       </div>
+
+      {/* Todo list */}
+      <TodoList user={user} />
 
       {/* Expense form */}
       <div>
@@ -339,26 +337,15 @@ export default function Dashboard({ user }) {
             <form onSubmit={handleEditSubmit} className="space-y-3">
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Date</label>
-                <div className="flex gap-2">
-                  <select value={editDay} onChange={e => setEditDay(e.target.value)} className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm" required>
-                    <option value="">Jour</option>
-                    {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                  <select value={editMonth} onChange={e => setEditMonth(e.target.value)} className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm" required>
-                    <option value="">Mois</option>
-                    {['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => (
-                      <option key={m} value={m}>{new Date(2000, Number(m) - 1).toLocaleDateString('fr-FR', { month: 'short' })}</option>
-                    ))}
-                  </select>
-                  <select value={editYear} onChange={e => setEditYear(e.target.value)} className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm" required>
-                    <option value="">Annee</option>
-                    {Array.from({ length: 10 }, (_, i) => String(2024 + i)).map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={e => setEditDate(e.target.value)}
+                  min="2020-01-01"
+                  max="2099-12-31"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  required
+                />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Description</label>

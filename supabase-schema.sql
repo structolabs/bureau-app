@@ -34,10 +34,21 @@ insert into users (nom, pin, couleur) values
   ('Flo', '1234', '#F59E0B')
 on conflict (nom) do nothing;
 
+create table if not exists todos (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  texte text not null,
+  cree_par text not null references users(nom),
+  fait boolean default false,
+  fait_par text references users(nom),
+  fait_le timestamptz
+);
+
 -- RLS policies (permissive for anon key)
 alter table users enable row level security;
 alter table reservations enable row level security;
 alter table depenses enable row level security;
+alter table todos enable row level security;
 
 create policy "Public read users" on users for select using (true);
 create policy "Public read reservations" on reservations for select using (true);
@@ -47,3 +58,7 @@ create policy "Public read depenses" on depenses for select using (true);
 create policy "Public insert depenses" on depenses for insert with check (true);
 create policy "Public update depenses" on depenses for update using (true) with check (true);
 create policy "Public delete depenses" on depenses for delete using (true);
+create policy "Public read todos" on todos for select using (true);
+create policy "Public insert todos" on todos for insert with check (true);
+create policy "Public update todos" on todos for update using (true) with check (true);
+create policy "Public delete todos" on todos for delete using (true);
