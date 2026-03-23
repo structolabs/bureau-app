@@ -41,7 +41,8 @@ create table if not exists todos (
   cree_par text not null references users(nom),
   fait boolean default false,
   fait_par text references users(nom),
-  fait_le timestamptz
+  fait_le timestamptz,
+  priorite text default 'normale' check (priorite in ('haute', 'normale', 'basse'))
 );
 
 -- RLS policies (permissive for anon key)

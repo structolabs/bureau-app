@@ -3,10 +3,21 @@ import { supabase } from '../lib/supabase'
 import { getUserColor, getUserLightColor } from '../lib/constants'
 import { IconPlus, IconTrash, IconCheck, IconListCheck } from './Icons'
 
+const PRIORITES = [
+  { value: 'haute',   label: 'Haute',   color: 'text-red-500',    bg: 'bg-red-50',    dot: 'bg-red-500' },
+  { value: 'normale', label: 'Normale', color: 'text-amber-500',  bg: 'bg-amber-50',  dot: 'bg-amber-400' },
+  { value: 'basse',   label: 'Basse',   color: 'text-gray-400',   bg: 'bg-gray-100',  dot: 'bg-gray-300' },
+]
+
+function getPriorite(value) {
+  return PRIORITES.find(p => p.value === value) || PRIORITES[1]
+}
+
 export default function TodoList({ user }) {
   const [todos, setTodos] = useState([])
   const [loading, setLoading] = useState(true)
   const [newTexte, setNewTexte] = useState('')
+  const [newPriorite, setNewPriorite] = useState('normale')
   const [saving, setSaving] = useState(false)
 
   const loadTodos = useCallback(async () => {
@@ -28,10 +39,12 @@ export default function TodoList({ user }) {
     await supabase.from('todos').insert({
       texte: newTexte.trim(),
       cree_par: user.nom,
+      priorite: newPriorite,
       fait: false,
     })
     setSaving(false)
     setNewTexte('')
+    setNewPriorite('normale')
     loadTodos()
   }
 
@@ -53,7 +66,10 @@ export default function TodoList({ user }) {
     setTodos(prev => prev.filter(t => t.id !== todo.id))
   }
 
-  const enCours = todos.filter(t => !t.fait)
+  const prioriteOrder = { haute: 0, normale: 1, basse: 2 }
+  const enCours = todos
+    .filter(t => !t.fait)
+    .sort((a, b) => (prioriteOrder[a.priorite] ?? 1) - (prioriteOrder[b.priorite] ?? 1))
   const termines = todos.filter(t => t.fait)
 
   return (
@@ -70,21 +86,40 @@ export default function TodoList({ user }) {
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {/* Formulaire d'ajout */}
-        <form onSubmit={handleAdd} className="flex items-center gap-2 p-3 border-b border-gray-100">
-          <input
-            type="text"
-            value={newTexte}
-            onChange={e => setNewTexte(e.target.value)}
-            placeholder="Ajouter une tâche..."
-            className="flex-1 text-sm text-gray-900 placeholder-gray-400 outline-none"
-          />
-          <button
-            type="submit"
-            disabled={saving || !newTexte.trim()}
-            className="p-1.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 transition-colors shrink-0"
-          >
-            <IconPlus className="w-4 h-4" />
-          </button>
+        <form onSubmit={handleAdd} className="p-3 border-b border-gray-100 space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newTexte}
+              onChange={e => setNewTexte(e.target.value)}
+              placeholder="Ajouter une tâche..."
+              className="flex-1 text-sm text-gray-900 placeholder-gray-400 outline-none"
+            />
+            <button
+              type="submit"
+              disabled={saving || !newTexte.trim()}
+              className="p-1.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 transition-colors shrink-0"
+            >
+              <IconPlus className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex gap-1.5">
+            {PRIORITES.map(p => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setNewPriorite(p.value)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                  newPriorite === p.value
+                    ? `${p.bg} ${p.color} ring-1 ring-current`
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${p.dot}`} />
+                {p.label}
+              </button>
+            ))}
+          </div>
         </form>
 
         {loading ? (
@@ -124,6 +159,8 @@ export default function TodoList({ user }) {
 }
 
 function TodoItem({ todo, user, onToggle, onDelete }) {
+  const prio = getPriorite(todo.priorite)
+
   return (
     <li className="flex items-center gap-3 px-3 py-2.5 border-t border-gray-100 first:border-0 hover:bg-gray-50 group">
       <button
@@ -142,6 +179,12 @@ function TodoItem({ todo, user, onToggle, onDelete }) {
       </span>
 
       <div className="flex items-center gap-1.5 shrink-0">
+        {!todo.fait && todo.priorite && (
+          <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${prio.bg} ${prio.color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
+            {prio.label}
+          </span>
+        )}
         <span
           className="text-xs font-medium px-2 py-0.5 rounded-full"
           style={{
