@@ -1,6 +1,14 @@
+## Démarrage obligatoire de chaque session
+
+1. retrieve_memory(query: "décisions récentes Structo", limit: 5)
+2. retrieve_memory(query: "bureau nanette application", limit: 5)
+Seulement ensuite lire les fichiers CONTEXT et commencer.
+
+---
+
 ## Contexte partagé Structo
 Contexte détaillé : ~/Documents/Structo/Context/ — voir INDEX.md
-Mémoire partagée : Acheron MCP
+Mémoire partagée : Structo Memory MCP (memory.structolabs.fr) — TOUJOURS utiliser store_memory en fin de session. Ne pas utiliser Acheron.
 Scraping : Firecrawl MCP
 
 # CLAUDE.md — Bureau Nanette
