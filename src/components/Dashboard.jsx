@@ -35,15 +35,16 @@ export default function Dashboard({ user }) {
     ? `${month.year + 1}-01-01`
     : `${month.year}-${String(month.month + 2).padStart(2, '0')}-01`
 
+  const [allDepenses, setAllDepenses] = useState([])
+
   const loadDepenses = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('depenses')
-      .select('*')
-      .gte('date', monthStart)
-      .lt('date', nextMonth)
-      .order('date', { ascending: false })
-    setDepenses(data || [])
+    const [{ data: monthly }, { data: all }] = await Promise.all([
+      supabase.from('depenses').select('*').gte('date', monthStart).lt('date', nextMonth).order('date', { ascending: false }),
+      supabase.from('depenses').select('id, paye_par, montant'),
+    ])
+    setDepenses(monthly || [])
+    setAllDepenses(all || [])
     setLoading(false)
   }, [monthStart, nextMonth])
 
@@ -51,17 +52,20 @@ export default function Dashboard({ user }) {
 
   const totalDepenses = useMemo(() => depenses.reduce((s, d) => s + Number(d.montant), 0), [depenses])
 
-  const solde = useMemo(() => {
-    const payeParUser = depenses.filter(d => d.paye_par === user.nom).reduce((s, d) => s + Number(d.montant), 0)
-    return payeParUser - totalDepenses / 3
-  }, [depenses, totalDepenses, user.nom])
+  // Solde cumulé toutes périodes confondues
+  const soldeCumul = useMemo(() => {
+    const total = allDepenses.reduce((s, d) => s + Number(d.montant), 0)
+    const payeParUser = allDepenses.filter(d => d.paye_par === user.nom).reduce((s, d) => s + Number(d.montant), 0)
+    return payeParUser - total / 3
+  }, [allDepenses, user.nom])
 
   const balanceData = useMemo(() => {
+    const total = allDepenses.reduce((s, d) => s + Number(d.montant), 0)
     return Object.keys(USERS).map(nom => {
-      const paye = depenses.filter(d => d.paye_par === nom).reduce((s, d) => s + Number(d.montant), 0)
-      return { nom, paye, solde: paye - totalDepenses / 3 }
+      const paye = allDepenses.filter(d => d.paye_par === nom).reduce((s, d) => s + Number(d.montant), 0)
+      return { nom, paye, solde: paye - total / 3 }
     })
-  }, [depenses, totalDepenses])
+  }, [allDepenses])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -156,7 +160,7 @@ export default function Dashboard({ user }) {
             label="Total commun"
             value={formatEuro(totalDepenses)}
           />
-          <SoldeCard solde={solde} />
+          <SoldeCard solde={soldeCumul} />
         </div>
       </div>
 
@@ -324,6 +328,7 @@ export default function Dashboard({ user }) {
                 <span className="font-semibold text-gray-900">{formatEuro(totalDepenses)}</span>
               </div>
               <div className="space-y-1.5">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Equilibre cumule</p>
                 {balanceData.map(b => (
                   <div key={b.nom} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
@@ -445,17 +450,17 @@ function SoldeCard({ solde }) {
 
   let label, valueColor, subtext
   if (solde > 0.01) {
-    label = 'Tu peux souffler'
+    label = 'Prochaines pour les autres'
     valueColor = 'text-emerald-600'
-    subtext = `Tu as ${formatEuro(solde)} d'avance — laisse les autres regler les prochaines`
+    subtext = `${formatEuro(solde)} d'avance au cumul`
   } else if (solde < -0.01) {
-    label = 'A toi de payer'
+    label = 'Prochaines depenses pour toi'
     valueColor = 'text-red-500'
-    subtext = `Tu as ${formatEuro(absSolde)} de retard — prends les prochaines depenses`
+    subtext = `${formatEuro(absSolde)} de retard au cumul`
   } else {
     label = 'Equilibre'
     valueColor = 'text-gray-900'
-    subtext = 'Continue comme ca !'
+    subtext = null
   }
 
   return (
