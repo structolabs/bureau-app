@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { CATEGORIES_DEPENSES, USERS, formatEuro, getUserColor, getUserLightColor } from '../lib/constants'
-import { IconWallet, IconPlus, IconChevronLeft, IconChevronRight, IconPencil, IconTrash, IconX } from './Icons'
+import { IconWallet, IconPlus, IconPencil, IconTrash, IconX } from './Icons'
 import TodoList from './TodoList'
 
 const GCAL_EMBED_URL = 'https://calendar.google.com/calendar/embed?src=ca65bb4a6552d5fd299d794cd3d1324bfdb89f980414d0620b51a7b1da0e1934%40group.calendar.google.com&ctz=Europe%2FParis&mode=WEEK&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0'
@@ -80,14 +80,6 @@ export default function Dashboard({ user }) {
     loadDepenses()
   }
 
-  function prevMonth() {
-    setMonth(m => m.month === 0 ? { year: m.year - 1, month: 11 } : { ...m, month: m.month - 1 })
-  }
-
-  function nextMonthNav() {
-    setMonth(m => m.month === 11 ? { year: m.year + 1, month: 0 } : { ...m, month: m.month + 1 })
-  }
-
   function openEdit(d) {
     setEditDepense(d)
     setEditDate(d.date)
@@ -124,6 +116,18 @@ export default function Dashboard({ user }) {
   }
 
   const monthLabel = new Date(month.year, month.month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+
+  const availableMonths = useMemo(() => {
+    const result = []
+    const now = new Date()
+    let y = 2026, m = 0
+    while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
+      result.push({ year: y, month: m })
+      m++
+      if (m > 11) { m = 0; y++ }
+    }
+    return result.reverse()
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -222,15 +226,20 @@ export default function Dashboard({ user }) {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium text-gray-900">Depenses du mois</h3>
-          <div className="flex items-center gap-2">
-            <button onClick={prevMonth} className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
-              <IconChevronLeft className="w-3.5 h-3.5 text-gray-600" />
-            </button>
-            <span className="text-xs font-medium text-gray-600 capitalize w-28 text-center">{monthLabel}</span>
-            <button onClick={nextMonthNav} className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
-              <IconChevronRight className="w-3.5 h-3.5 text-gray-600" />
-            </button>
-          </div>
+          <select
+            value={`${month.year}-${month.month}`}
+            onChange={e => {
+              const [y, m] = e.target.value.split('-').map(Number)
+              setMonth({ year: y, month: m })
+            }}
+            className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 bg-white capitalize"
+          >
+            {availableMonths.map(({ year, month: m }) => (
+              <option key={`${year}-${m}`} value={`${year}-${m}`}>
+                {new Date(year, m).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -428,20 +437,18 @@ function MetricCard({ icon, label, value, valueColor = 'text-gray-900' }) {
   )
 }
 
-function SoldeCard({ solde, userName }) {
-  const others = Object.keys(USERS).filter(n => n !== userName)
+function SoldeCard({ solde }) {
   const absSolde = Math.abs(solde)
-  const perPerson = absSolde / 2
 
   let label, valueColor, subtext
   if (solde > 0.01) {
     label = 'A recuperer'
     valueColor = 'text-emerald-600'
-    subtext = `${others.join(' et ')} te doivent ${formatEuro(perPerson)} chacun`
+    subtext = `Tu as avance ${formatEuro(solde)} au-dela de ta part du mois`
   } else if (solde < -0.01) {
     label = 'A regler'
     valueColor = 'text-red-500'
-    subtext = `Tu dois ${formatEuro(absSolde)} a repartir sur les prochaines depenses`
+    subtext = `Tu dois encore ${formatEuro(absSolde)} pour egaler ta part du mois`
   } else {
     label = 'Equilibre'
     valueColor = 'text-gray-900'
