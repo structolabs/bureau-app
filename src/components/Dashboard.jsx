@@ -131,14 +131,33 @@ export default function Dashboard({ user }) {
 
   return (
     <div className="space-y-6">
-      {/* Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <MetricCard
-          icon={<IconWallet className="w-5 h-5 text-gray-400" />}
-          label="Depenses du mois"
-          value={formatEuro(totalDepenses)}
-        />
-        <SoldeCard solde={solde} userName={user.nom} />
+      {/* Month selector + Metrics */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-900">Depenses du mois</h3>
+          <select
+            value={`${month.year}-${month.month}`}
+            onChange={e => {
+              const [y, m] = e.target.value.split('-').map(Number)
+              setMonth({ year: y, month: m })
+            }}
+            className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 bg-white capitalize"
+          >
+            {availableMonths.map(({ year, month: m }) => (
+              <option key={`${year}-${m}`} value={`${year}-${m}`}>
+                {new Date(year, m).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard
+            icon={<IconWallet className="w-5 h-5 text-gray-400" />}
+            label="Total commun"
+            value={formatEuro(totalDepenses)}
+          />
+          <SoldeCard solde={solde} />
+        </div>
       </div>
 
       {/* Google Calendar */}
@@ -224,23 +243,7 @@ export default function Dashboard({ user }) {
 
       {/* Expenses table */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-900">Depenses du mois</h3>
-          <select
-            value={`${month.year}-${month.month}`}
-            onChange={e => {
-              const [y, m] = e.target.value.split('-').map(Number)
-              setMonth({ year: y, month: m })
-            }}
-            className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 bg-white capitalize"
-          >
-            {availableMonths.map(({ year, month: m }) => (
-              <option key={`${year}-${m}`} value={`${year}-${m}`}>
-                {new Date(year, m).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-              </option>
-            ))}
-          </select>
-        </div>
+        <h3 className="text-sm font-medium text-gray-900 mb-3">Detail des depenses</h3>
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {loading ? (
@@ -442,17 +445,17 @@ function SoldeCard({ solde }) {
 
   let label, valueColor, subtext
   if (solde > 0.01) {
-    label = 'A recuperer'
+    label = 'Tu peux souffler'
     valueColor = 'text-emerald-600'
-    subtext = `Tu as avance ${formatEuro(solde)} au-dela de ta part du mois`
+    subtext = `Tu as ${formatEuro(solde)} d'avance — laisse les autres regler les prochaines`
   } else if (solde < -0.01) {
-    label = 'A regler'
+    label = 'A toi de payer'
     valueColor = 'text-red-500'
-    subtext = `Tu dois encore ${formatEuro(absSolde)} pour egaler ta part du mois`
+    subtext = `Tu as ${formatEuro(absSolde)} de retard — prends les prochaines depenses`
   } else {
     label = 'Equilibre'
     valueColor = 'text-gray-900'
-    subtext = null
+    subtext = 'Continue comme ca !'
   }
 
   return (
